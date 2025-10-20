@@ -393,6 +393,6 @@ This project demonstrates:
 
 ---
 
-**Built with ❤️ using ASP.NET Core Microservices Architecture**
+**Built with using ASP.NET Core Microservices Architecture**
 
 *This project showcases enterprise-level software engineering practices suitable for scalable, production-ready applications.*
