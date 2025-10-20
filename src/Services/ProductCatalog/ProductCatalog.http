@@ -1,0 +1,86 @@
+@ProductCatalog_HostAddress = http://localhost:5053
+
+### Product Catalog API Tests
+
+@baseUrl = http://localhost:5001
+@apiGatewayUrl = http://localhost:5000
+
+### Health Check
+GET {{baseUrl}}/health
+
+### Get All Products (Paginated)
+GET {{baseUrl}}/api/products?page=1&pageSize=10
+
+### Get Products by Category
+GET {{baseUrl}}/api/products?page=1&pageSize=10&category=Electronics
+
+### Search Products
+GET {{baseUrl}}/api/products/search?query=laptop
+
+### Get Product by ID
+GET {{baseUrl}}/api/products/67123abc456def789012345
+
+### Create Product
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Dell XPS 15 Laptop",
+  "description": "High-performance laptop with Intel i7 processor, 16GB RAM, and 512GB SSD",
+  "price": 1299.99,
+  "category": "Electronics",
+  "imageUrl": "https://example.com/images/dell-xps-15.jpg",
+  "stockQuantity": 25,
+  "tags": ["laptop", "dell", "electronics", "computer"]
+}
+
+### Create Another Product
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Wireless Mouse",
+  "description": "Ergonomic wireless mouse with adjustable DPI",
+  "price": 29.99,
+  "category": "Accessories",
+  "imageUrl": "https://example.com/images/wireless-mouse.jpg",
+  "stockQuantity": 100,
+  "tags": ["mouse", "wireless", "accessories"]
+}
+
+### Update Product
+PUT {{baseUrl}}/api/products/67123abc456def789012345
+Content-Type: application/json
+
+{
+  "name": "Dell XPS 15 Laptop - Updated",
+  "price": 1199.99,
+  "stockQuantity": 30,
+  "isAvailable": true
+}
+
+### Update Product Stock
+PATCH {{baseUrl}}/api/products/67123abc456def789012345/stock
+Content-Type: application/json
+
+-5
+
+### Delete Product
+DELETE {{baseUrl}}/api/products/67123abc456def789012345
+
+### Via API Gateway - Get All Products
+GET {{apiGatewayUrl}}/products?page=1&pageSize=10
+
+### Via API Gateway - Create Product
+POST {{apiGatewayUrl}}/products
+Content-Type: application/json
+
+{
+  "name": "iPhone 15 Pro",
+  "description": "Latest iPhone with A17 Pro chip",
+  "price": 999.99,
+  "category": "Smartphones",
+  "imageUrl": "https://example.com/images/iphone-15-pro.jpg",
+  "stockQuantity": 50,
+  "tags": ["iphone", "smartphone", "apple", "electronics"]
+}

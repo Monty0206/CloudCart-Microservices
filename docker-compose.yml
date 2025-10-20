@@ -1,0 +1,179 @@
+services:
+  # MongoDB
+  mongodb:
+    image: mongo:latest
+    container_name: cloudcart-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - cloudcart-network
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: cloudcart-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - cloudcart-network
+
+  # Redis
+  redis:
+    image: redis:alpine
+    container_name: cloudcart-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - cloudcart-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: src/ApiGateway/Dockerfile
+    container_name: cloudcart-api-gateway
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      - product-catalog
+      - shopping-cart
+      - order
+      - payment
+      - user
+    networks:
+      - cloudcart-network
+
+  # Product Catalog Service
+  product-catalog:
+    build:
+      context: .
+      dockerfile: src/Services/ProductCatalog/Dockerfile
+    container_name: cloudcart-product-catalog
+    ports:
+      - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__MongoDB=mongodb://admin:password123@mongodb:27017
+      - MongoDB__DatabaseName=ProductCatalogDb
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__ExchangeName=cloudcart_event_bus
+    depends_on:
+      - mongodb
+      - rabbitmq
+    networks:
+      - cloudcart-network
+
+  # Shopping Cart Service
+  shopping-cart:
+    build:
+      context: .
+      dockerfile: src/Services/ShoppingCart/Dockerfile
+    container_name: cloudcart-shopping-cart
+    ports:
+      - "5002:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__MongoDB=mongodb://admin:password123@mongodb:27017
+      - MongoDB__DatabaseName=ShoppingCartDb
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__ExchangeName=cloudcart_event_bus
+    depends_on:
+      - mongodb
+      - rabbitmq
+      - redis
+    networks:
+      - cloudcart-network
+
+  # Order Service
+  order:
+    build:
+      context: .
+      dockerfile: src/Services/Order/Dockerfile
+    container_name: cloudcart-order
+    ports:
+      - "5003:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__MongoDB=mongodb://admin:password123@mongodb:27017
+      - MongoDB__DatabaseName=OrderDb
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__ExchangeName=cloudcart_event_bus
+    depends_on:
+      - mongodb
+      - rabbitmq
+    networks:
+      - cloudcart-network
+
+  # Payment Service
+  payment:
+    build:
+      context: .
+      dockerfile: src/Services/Payment/Dockerfile
+    container_name: cloudcart-payment
+    ports:
+      - "5004:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__MongoDB=mongodb://admin:password123@mongodb:27017
+      - MongoDB__DatabaseName=PaymentDb
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__ExchangeName=cloudcart_event_bus
+    depends_on:
+      - mongodb
+      - rabbitmq
+    networks:
+      - cloudcart-network
+
+  # User Service
+  user:
+    build:
+      context: .
+      dockerfile: src/Services/User/Dockerfile
+    container_name: cloudcart-user
+    ports:
+      - "5005:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__MongoDB=mongodb://admin:password123@mongodb:27017
+      - MongoDB__DatabaseName=UserDb
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__ExchangeName=cloudcart_event_bus
+      - JWT__Secret=YourSuperSecretKeyForJWTTokenGeneration123456
+      - JWT__Issuer=CloudCartMicroservices
+      - JWT__Audience=CloudCartMicroservices
+      - JWT__ExpirationMinutes=60
+    depends_on:
+      - mongodb
+      - rabbitmq
+    networks:
+      - cloudcart-network
+
+networks:
+  cloudcart-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  rabbitmq_data:
+  redis_data:
